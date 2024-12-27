@@ -1,0 +1,126 @@
+<div>Teachable Machine Image Model</div>
+<button type="button" onclick="init()">Start</button>
+<button type="button" onclick="update()">Update</button>
+<button type="button" onclick="initCOLOR()">Color Check START</button>
+<button type="button" onclick="updateCOLOR()">Update Color</button>
+<div id="webcam-container"></div>
+<div id="label-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+<script type="text/javascript">
+    // More API functions here:
+    // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
+    // the link to your model provided by Teachable Machine export panel
+    const URL = "https://teachablemachine.withgoogle.com/models/7sprKCdG9/";
+    let model, webcam, labelContainer, maxPredictions;
+
+    const URLCOLOR = "https://teachablemachine.withgoogle.com/models/Gn05bQ40F/"
+    let maxPredictionsCOLOR;
+
+    let BestPrediction;
+
+
+
+    let colorList;
+
+
+    // Load the image model and setup the webcam
+    async function init() {
+        const modelURL = URL + "model.json"; //URL for metadata (e.g., class labels).
+        const metadataURL = URL + "metadata.json"; 
+
+        model = await tmImage.load(modelURL, metadataURL); //Loads the model and its metadata using the Teachable Machine Image library.
+        maxPredictions = model.getTotalClasses(); //Retrieves the total number of classes (categories) the model can predict.
+
+        // Convenience function to setup a webcam
+        const flip = true; // whether to flip the webcam
+        webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
+        await webcam.setup(); // request access to the webcam
+        await webcam.play();
+        window.requestAnimationFrame(loop);
+
+        // append elements to the DOM
+        document.getElementById("webcam-container").appendChild(webcam.canvas); //Embeds the live webcam feed (as a canvas element) into the webcam-container div.
+        labelContainer = document.getElementById("label-container");
+        for (let i = 0; i < maxPredictions; i++) { // and class labels
+            labelContainer.appendChild(document.createElement("div"));
+        }
+    }
+
+    async function loop() {
+        webcam.update(); // update the webcam frame
+        await predict(); // Calls the predict() function to classify the current webcam frame.
+        window.requestAnimationFrame(loop);
+    }
+
+    // run the webcam image through the image model
+    async function predict() {
+        // predict can take in an image, video or canvas html element
+        const prediction = await model.predict(webcam.canvas);
+        for (let i = 0; i < maxPredictions; i++) {
+            const classPrediction =
+                prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+            labelContainer.childNodes[i].innerHTML = classPrediction;
+        }
+    }
+
+    async function update(){
+        const prediction = await model.predict(webcam.canvas);
+        for (let i = 0; i < maxPredictions; i++) {
+            if (prediction[i].probability.toFixed(2) > 0.7){
+               console.log("there are " + prediction[i].className)
+               BestPrediction = prediction[i].className
+           }
+
+        }
+    }
+
+    // ...  ...   .     ...     ...
+    // .    . .   .     . .     . .
+    // ...  ...   ...   ...     .   .
+
+    
+    async function initCOLOR(){
+        const modelURL = URLCOLOR + "model.json"; 
+        const metadataURL = URLCOLOR + "metadata.json"; 
+
+        model = await tmImage.load(modelURL, metadataURL); //Loads the model and its metadata using the Teachable Machine Image library.
+        maxPredictionsCOLOR = model.getTotalClasses();
+
+        window.requestAnimationFrame(loopCOLOR);
+        // append elements to the DOM
+        document.getElementById("webcam-container").appendChild(webcam.canvas); //Embeds the live webcam feed (as a canvas element) into the webcam-container div.
+        labelContainer = document.getElementById("label-container");
+        for (let i = 0; i < maxPredictions; i++) { // and class labels
+            labelContainer.appendChild(document.createElement("div"));
+        }
+    }
+
+    async function loopCOLOR(){
+        webcam.update(); // update the webcam frame
+        await predictCOLOR(); // Calls the predict() function to classify the current webcam frame.
+        window.requestAnimationFrame(loopCOLOR);
+    }
+
+    async function predictCOLOR(){
+        const prediction = await model.predict(webcam.canvas);
+        for (let i = 0; i < maxPredictionsCOLOR; i++) {
+            const classPrediction =
+                prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+            labelContainer.childNodes[i].innerHTML = classPrediction;
+            updateCOLOR()
+        }
+    }
+
+    async function updateCOLOR(){
+        const prediction = await model.predict(webcam.canvas);
+        for (let i = 0; i < maxPredictions; i++) {
+            if (prediction[i].probability.toFixed(2) > 0.7){
+               console.log("color is: " + prediction[i].className)
+           }
+        }
+    }
+
+</script>
+
