@@ -1,8 +1,9 @@
 <div>Teachable Machine Image Model</div>
 <button type="button" onclick="init()">Start</button>
 <button type="button" onclick="update()">Update</button>
-<button type="button" onclick="initCOLOR()">Color Check START</button>
+<button type="button" onclick="initCOLOR()">Start model for Color</button>
 <button type="button" onclick="updateCOLOR()">Update Color</button>
+<button type="button" onclick="finish()">finish</button>
 <div id="webcam-container"></div>
 <div id="label-container"></div>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
@@ -20,9 +21,7 @@
 
     let BestPrediction;
 
-
-
-    let colorList;
+    let colorList = [];
 
 
     // Load the image model and setup the webcam
@@ -103,13 +102,13 @@
         window.requestAnimationFrame(loopCOLOR);
     }
 
-    async function predictCOLOR(){
+    async function predictCOLOR() {
+        // predict can take in an image, video or canvas html element
         const prediction = await model.predict(webcam.canvas);
-        for (let i = 0; i < maxPredictionsCOLOR; i++) {
+        for (let i = 0; i < maxPredictions; i++) {
             const classPrediction =
                 prediction[i].className + ": " + prediction[i].probability.toFixed(2);
             labelContainer.childNodes[i].innerHTML = classPrediction;
-            updateCOLOR()
         }
     }
 
@@ -117,9 +116,15 @@
         const prediction = await model.predict(webcam.canvas);
         for (let i = 0; i < maxPredictions; i++) {
             if (prediction[i].probability.toFixed(2) > 0.7){
-               console.log("color is: " + prediction[i].className)
+               console.log("color is " + prediction[i].className)
+               colorList.push(prediction[i].className)
            }
+
         }
+    }
+
+    async function finish(){
+        console.log(colorList);
     }
 
 </script>
